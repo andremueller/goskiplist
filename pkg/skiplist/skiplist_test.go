@@ -1,7 +1,9 @@
 package skiplist
 
 import (
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -9,15 +11,23 @@ import (
 func randomTest(t *testing.T, p float64, maxLevel int, count int) {
 	s := NewSkipList[int, int](p, maxLevel)
 
-	assert.Equal(t, uint64(0), s.Size())
+	keys := make([]int, count)
+	for i := 0; i < count; i++ {
+		keys[i] = i
+	}
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(keys), func(i, j int) { keys[i], keys[j] = keys[j], keys[i] })
 
-	s.Set(127, 1)
-	assert.Equal(t, 1, s.Size())
+	for i, k := range keys {
+		assert.Equal(t, i, s.Size())
+		s.Set(k, i)
+		assert.Equal(t, i+1, s.Size())
+		x := s.Get(k)
+		assert.NotNil(t, x)
 
-	x := s.Get(127)
-	assert.NotNil(t, x)
-
-	assert.Equal(t, 1, x.Value)
+		assert.Equal(t, k, x.Key())
+		assert.Equal(t, i, x.Value)
+	}
 }
 
 func TestNewSkipList(t *testing.T) {

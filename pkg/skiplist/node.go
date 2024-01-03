@@ -6,15 +6,18 @@ type Node[K cmp.Ordered, V any] struct {
 	key   K
 	Value V
 	next  []*Node[K, V]
-	dist  []uint64
+	dist  []int
 }
 
-func newNode[K cmp.Ordered, V any](key K, value V, level int) *Node[K, V] {
+func newNode[K cmp.Ordered, V any](key K, value V, level int, capacity int) *Node[K, V] {
+	if capacity < level {
+		capacity = level
+	}
 	return &Node[K, V]{
 		key:   key,
 		Value: value,
-		next:  make([]*Node[K, V], level),
-		dist:  make([]uint64, level),
+		next:  make([]*Node[K, V], level, capacity),
+		dist:  make([]int, level, capacity),
 	}
 }
 

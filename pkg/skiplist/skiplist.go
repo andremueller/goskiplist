@@ -8,7 +8,7 @@ import (
 type SkipList[K cmp.Ordered, V any] struct {
 	p        float64
 	maxLevel int
-	count    uint64
+	count    int
 	head     *Node[K, V]
 }
 
@@ -19,11 +19,11 @@ func NewSkipList[K cmp.Ordered, V any](p float64, maxLevel int) *SkipList[K, V] 
 		p:        p,
 		maxLevel: maxLevel,
 		count:    0,
-		head:     newNode[K, V](dummyKey, dummyValue, 1),
+		head:     newNode[K, V](dummyKey, dummyValue, 1, maxLevel),
 	}
 }
 
-func (s *SkipList[K, V]) Size() uint64 {
+func (s *SkipList[K, V]) Size() int {
 	return s.count
 }
 
@@ -45,13 +45,13 @@ func (s *SkipList[K, V]) Set(key K, value V) *Node[K, V] {
 	update := make([]*Node[K, V], s.maxLevel)
 	x := s.head
 	for i := s.Level() - 1; i >= 0; i-- {
-		for cmp.Less(x.next[i].key, key) {
+		for x.next[i] != nil && cmp.Less(x.next[i].key, key) {
 			x = x.next[i]
 		}
 		update[i] = x
 	}
 	x = x.next[0]
-	if x.key == key {
+	if x != nil && x.key == key {
 		// override value
 		x.Value = value
 		return x
@@ -65,11 +65,11 @@ func (s *SkipList[K, V]) Set(key K, value V) *Node[K, V] {
 		}
 		s.head.extendLevel(newLevel)
 	}
-	x = newNode[K, V](key, value, newLevel)
+	x = newNode[K, V](key, value, newLevel, newLevel)
 	for i := 0; i < newLevel; i++ {
 		x.next[i] = update[i].next[i]
 		update[i].next[i] = x
-		// TODO update dist
+		// TODO update dist on all levels
 	}
 	s.count++
 
@@ -79,24 +79,24 @@ func (s *SkipList[K, V]) Set(key K, value V) *Node[K, V] {
 func (s *SkipList[K, V]) Get(key K) *Node[K, V] {
 	x := s.head
 	for i := s.Level() - 1; i >= 0; i-- {
-		for cmp.Less(x.next[i].key, key) {
+		for x.next[i] != nil && cmp.Less(x.next[i].key, key) {
 			x = x.next[i]
 		}
 	}
 	x = x.next[0]
-	if x.key == key {
+	if x != nil && x.key == key {
 		return x
 	}
 	return nil
 }
 
 // TODO dist not implement
-func (s *SkipList[K, V]) GetByPos(k uint64) *Node[K, V] {
+func (s *SkipList[K, V]) GetByPos(k int) *Node[K, V] {
 	if k >= s.count {
 		return nil
 	}
 	x := s.head
-	pos := uint64(0)
+	pos := 0
 	for i := s.Level() - 1; i >= 0; i-- {
 		for pos+x.dist[i] <= k {
 			pos += x.dist[i]
@@ -110,6 +110,7 @@ func (s *SkipList[K, V]) GetByPos(k uint64) *Node[K, V] {
 // TODO InsertByPos
 // TODO RemoveByPos
 
-func (s *SkipList[K, V]) Remove(key K) bool {
-	return false
-}
+// TODO
+// func (s *SkipList[K, V]) Remove(key K) bool {
+// 	return false
+// }
