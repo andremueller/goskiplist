@@ -20,8 +20,12 @@ func randomTest(t *testing.T, p float64, maxLevel int, count int) {
 
 	for i, k := range keys {
 		assert.Equal(t, i, s.Size())
+		assert.Nil(t, s.Get(k))
 		s.Set(k, i)
 		assert.Equal(t, i+1, s.Size())
+	}
+
+	for i, k := range keys {
 		x := s.Get(k)
 		assert.NotNil(t, x)
 
