@@ -1,6 +1,9 @@
 package skiplist
 
-import "cmp"
+import (
+	"cmp"
+	"fmt"
+)
 
 type Node[K cmp.Ordered, V any] struct {
 	key   K
@@ -34,4 +37,8 @@ func (n *Node[K, V]) extendLevel(newLevel int) {
 		n.next = n.next[:newLevel]
 		n.dist = n.dist[:newLevel]
 	}
+}
+
+func (n *Node[K, V]) String() string {
+	return fmt.Sprintf("key: %v, value: %v | dist: %v", n.key, n.Value, n.dist)
 }
