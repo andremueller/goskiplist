@@ -2,6 +2,7 @@ package skiplist
 
 import (
 	"cmp"
+	"fmt"
 	"log"
 	"math/rand"
 )
@@ -91,8 +92,8 @@ func (s *SkipList[K, V]) randomLevel() int {
 // Replaces the value if the key was already added to the set or inserts the key if not.
 // Return a reference to the node and its current position 0...n-1 within the skip list.
 func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int) {
-	update := make([]*Node[K, V], s.maxLevel)
-	updatePos := make([]int, s.maxLevel)
+	update := make([]*Node[K, V], s.Level(), s.maxLevel)
+	updatePos := make([]int, s.Level(), s.maxLevel)
 	x := s.head
 	pos := -1
 	for i := s.Level() - 1; i >= 0; i-- {
@@ -129,13 +130,13 @@ func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int) {
 		x.next[i] = update[i].next[i]
 		update[i].next[i] = x
 		delta := pos - updatePos[i]
-		x.dist[i] = update[i].dist[i] - delta + 1
-		update[i].dist[i] = delta
+		x.dist[i] = update[i].dist[i] - delta
+		update[i].dist[i] = delta + 1
 	}
 
 	s.count++
 
-	return x, pos
+	return x, pos + 1
 }
 
 const InvalidPos = -1
@@ -175,7 +176,8 @@ func (s *SkipList[K, V]) GetByPos(k int) *Node[K, V] {
 }
 
 func (s *SkipList[K, V]) String() string {
-	str := ""
+	str := fmt.Sprintf("n=%d L=%d\n", s.Size(), s.Level())
+
 	x := s.head
 	for x != nil {
 		str += x.String() + "\n"

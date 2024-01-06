@@ -33,9 +33,14 @@ func (n *Node[K, V]) Level() int {
 }
 
 func (n *Node[K, V]) extendLevel(newLevel int) {
-	if newLevel > n.Level() {
+	oldLevel := n.Level()
+	if newLevel > oldLevel {
 		n.next = n.next[:newLevel]
 		n.dist = n.dist[:newLevel]
+		for i := oldLevel; i < newLevel; i++ {
+			n.next[i] = nil
+			n.dist[i] = 0
+		}
 	}
 }
 

@@ -51,8 +51,16 @@ func createSkipList(data []testData) *SkipList[int, int] {
 }
 
 func TestInsert(t *testing.T) {
-	s := createSkipList(example1)
+	// s := createSkipList(example1)
+	s := NewSkipList[int, int](WithLevelFunc[int, int](createPlayBackLevelFunc(example1)))
+
 	fmt.Print(s.String())
+	for i, x := range example1 {
+		fmt.Printf("================== %d ====================\n", i)
+		_, pos := s.Set(x.key, i)
+		fmt.Printf(" pos = %d\n", pos)
+		fmt.Print(s.String())
+	}
 }
 
 func makeRandomData(count int) []int {
