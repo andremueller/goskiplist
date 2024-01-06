@@ -50,7 +50,7 @@ func createSkipList(data []testData) *SkipList[int, int] {
 	return s
 }
 
-func TestInsert(t *testing.T) {
+func TestGetByPosWithFixed(t *testing.T) {
 	// s := createSkipList(example1)
 	s := NewSkipList[int, int](WithLevelFunc[int, int](createPlayBackLevelFunc(example1)))
 
@@ -60,6 +60,15 @@ func TestInsert(t *testing.T) {
 		_, pos := s.Set(x.key, i)
 		fmt.Printf(" pos = %d\n", pos)
 		fmt.Print(s.String())
+	}
+
+	// n := s.GetByPos(s.Size() - 1)
+	// assert.NotNil(t, n)
+
+	for i, x := range example1 {
+		n := s.GetByPos(i)
+		assert.NotNil(t, n)
+		assert.Equal(t, x.key, n.Key())
 	}
 }
 
@@ -89,7 +98,7 @@ func randomTest(t *testing.T, s *SkipList[int, int], count int) {
 		assert.NotNil(t, x)
 		assert.Equal(t, k, x.Key())
 		assert.Equal(t, i, x.Value)
-		assert.Equal(t, i, pos) // key will exactly match its position
+		assert.Equal(t, k, pos) // key will exactly match its position
 	}
 }
 

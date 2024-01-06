@@ -169,17 +169,18 @@ func (s *SkipList[K, V]) Get(key K) (*Node[K, V], int) {
 }
 
 func (s *SkipList[K, V]) GetByPos(k int) *Node[K, V] {
-	if k >= s.count {
+	if k < 0 || k >= s.count {
 		return nil
 	}
 	x := s.head
-	pos := 0
+	pos := -1
 	for i := s.Level() - 1; i >= 0; i-- {
-		for pos+x.dist[i] <= k {
+		for i < len(x.dist) && pos+x.dist[i] < k {
 			pos += x.dist[i]
 			x = x.next[i]
 		}
 	}
+	x = x.next[0]
 
 	return x
 }
