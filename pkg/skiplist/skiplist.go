@@ -71,7 +71,7 @@ func NewSkipList[K cmp.Ordered, V any](options ...skipListOption[K, V]) *SkipLis
 		opt(s)
 	}
 
-	s.head = newNode[K, V](dummyKey, dummyValue, 1, s.maxLevel)
+	s.head = newNode[K, V](dummyKey, dummyValue, 0, s.maxLevel)
 	return s
 }
 
@@ -104,7 +104,7 @@ func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int) {
 		update[i] = x
 		updatePos[i] = pos
 	}
-	if x.next[0] != nil && x.next[0].key == key {
+	if len(x.next) > 0 && x.next[0] != nil && x.next[0].key == key {
 		// key already exists: override value
 		x = x.next[0]
 		x.Value = value
@@ -121,17 +121,24 @@ func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int) {
 		s.head.extendLevel(newLevel)
 		for i := oldLevel; i < newLevel; i++ {
 			update[i] = s.head
-			updatePos[i] = 0
+			updatePos[i] = -1
 			s.head.dist[i] = s.Size() + 1
 		}
 	}
 	x = newNode[K, V](key, value, newLevel, newLevel)
-	for i := 0; i < newLevel; i++ {
-		x.next[i] = update[i].next[i]
-		update[i].next[i] = x
-		delta := pos - updatePos[i]
-		x.dist[i] = update[i].dist[i] - delta
-		update[i].dist[i] = delta + 1
+	for i := 0; i < s.Level(); i++ {
+		if i >= newLevel {
+			update[i].dist[i]++
+		} else {
+			x.next[i] = update[i].next[i]
+			update[i].next[i] = x
+			delta := pos - updatePos[i]
+			x.dist[i] = update[i].dist[i] - delta - 1
+			if x.dist[i] < 0 {
+				x.dist[i] = 0
+			}
+			update[i].dist[i] = delta + 1
+		}
 	}
 
 	s.count++
@@ -152,9 +159,11 @@ func (s *SkipList[K, V]) Get(key K) (*Node[K, V], int) {
 			x = x.next[i]
 		}
 	}
-	x = x.next[0]
-	if x != nil && x.key == key {
-		return x, pos
+	if len(x.next) > 0 {
+		x = x.next[0]
+		if x != nil && x.key == key {
+			return x, pos
+		}
 	}
 	return nil, InvalidPos
 }
@@ -181,7 +190,11 @@ func (s *SkipList[K, V]) String() string {
 	x := s.head
 	for x != nil {
 		str += x.String() + "\n"
-		x = x.next[0]
+		if len(x.next) > 0 {
+			x = x.next[0]
+		} else {
+			x = nil
+		}
 	}
 	return str
 }

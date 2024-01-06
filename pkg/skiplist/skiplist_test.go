@@ -89,7 +89,7 @@ func randomTest(t *testing.T, s *SkipList[int, int], count int) {
 		assert.NotNil(t, x)
 		assert.Equal(t, k, x.Key())
 		assert.Equal(t, i, x.Value)
-		assert.Equal(t, k, pos) // key will exactly match its position
+		assert.Equal(t, i, pos) // key will exactly match its position
 	}
 }
 
