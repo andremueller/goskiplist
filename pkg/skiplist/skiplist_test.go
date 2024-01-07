@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testData struct {
@@ -112,6 +113,27 @@ func TestGetByPosWithFixed2(t *testing.T) {
 		assert.Equal(t, x.pos, pos)
 	}
 
+	// Get key not contained in data
+	n, pos := s.Get(1000)
+	assert.Nil(t, n)
+	assert.Equal(t, InvalidPos, pos)
+
+	// Test iteration (all keys must be ascending)
+	lastKey := -1
+	for x := s.First(); x != nil; x = x.Next() {
+		assert.Less(t, lastKey, x.Key())
+		lastKey = x.Key()
+	}
+
+	// Remove one key by index
+	key := 25
+	idx := 8
+	x := s.RemoveByPos(idx)
+	fmt.Printf("After removing i=%d\n", idx)
+	fmt.Print(s.String())
+	assert.Equal(t, key, x.Key())
+	x2, _ := s.Get(key)
+	assert.Nil(t, x2)
 }
 
 func Shuffle[V any](a []V) {
@@ -129,8 +151,9 @@ func makeRandomData(count int) []int {
 	return keys
 }
 
-func randomTest(t *testing.T, s *SkipList[int, int], count int) {
-	keys := makeRandomData(count)
+func TestSetRemoveByKey(t *testing.T) {
+	s := NewSkipList[int, int]()
+	keys := makeRandomData(100)
 
 	// Set
 	for i, k := range keys {
@@ -150,6 +173,7 @@ func randomTest(t *testing.T, s *SkipList[int, int], count int) {
 		assert.Equal(t, i, x.Value)
 		assert.Equal(t, k, pos) // key will exactly match its position
 	}
+	fmt.Printf("Level = %d\n", s.Level())
 
 	// Remove
 	n := s.Size()
@@ -177,14 +201,10 @@ func randomTest(t *testing.T, s *SkipList[int, int], count int) {
 	}
 }
 
-func TestNewSkipList(t *testing.T) {
+func TestGetRemoveByPos(t *testing.T) {
 	s := NewSkipList[int, int]()
-	randomTest(t, s, 100)
-}
-
-func randomPosTest(t *testing.T, s *SkipList[int, int], count int) {
-
-	keys := makeRandomData(count)
+	rand.Seed(173)
+	keys := makeRandomData(100)
 
 	for i, k := range keys {
 		assert.Equal(t, i, s.Size())
@@ -201,9 +221,23 @@ func randomPosTest(t *testing.T, s *SkipList[int, int], count int) {
 		assert.Equal(t, k, x.Key())
 		assert.Equal(t, i, x.Value)
 	}
-}
 
-func TestGetByPos(t *testing.T) {
-	s := NewSkipList[int, int]()
-	randomPosTest(t, s, 100)
+	for s.Size() > 0 {
+		pos := rand.Intn(s.Size())
+		x := s.GetByPos(pos)
+		assert.NotNil(t, x)
+
+		x2, pos2 := s.Get(x.Key())
+		assert.Equal(t, x.Key(), x2.Key())
+		assert.Equal(t, pos, pos2)
+
+		sizeBefore := s.Size()
+		x3 := s.RemoveByPos(pos)
+		assert.Equal(t, x.Key(), x3.Key())
+		require.Equal(t, sizeBefore-1, s.Size())
+
+		x4, _ := s.Get(x.Key())
+		assert.Nil(t, x4)
+		break
+	}
 }

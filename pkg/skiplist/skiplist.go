@@ -75,6 +75,10 @@ func NewSkipList[K cmp.Ordered, V any](options ...skipListOption[K, V]) *SkipLis
 	return s
 }
 
+func (s *SkipList[K, V]) First() *Node[K, V] {
+	return s.head.Next()
+}
+
 func (s *SkipList[K, V]) Size() int {
 	return s.count
 }
@@ -222,6 +226,47 @@ func (s *SkipList[K, V]) Remove(key K) (*Node[K, V], int) {
 		return x, pos
 	}
 	return nil, InvalidPos
+}
+
+func (s *SkipList[K, V]) RemoveByPos(k int) *Node[K, V] {
+	if k < 0 || k >= s.count {
+		return nil
+	}
+
+	update := make([]*Node[K, V], s.Level(), s.maxLevel)
+	updatePos := make([]int, s.Level(), s.maxLevel)
+	x := s.head
+	pos := -1 // the head has position -1, the first element 0
+
+	for i := s.Level() - 1; i >= 0; i-- {
+		for x.next[i] != nil && pos+x.dist[i] < k {
+			pos += x.dist[i]
+			x = x.next[i]
+		}
+		update[i] = x
+		updatePos[i] = pos
+	}
+	// remove node from list
+	pos++
+	x = x.Next()
+	for i := 0; i < s.Level(); i++ {
+		if update[i].next[i] == x {
+			update[i].next[i] = x.next[i]
+			update[i].dist[i] += x.dist[i] - 1
+		} else {
+			update[i].dist[i]--
+		}
+	}
+
+	// adapt level
+	newLevel := s.Level()
+	for newLevel > 0 && s.head.next[newLevel-1] == nil {
+		newLevel--
+	}
+	s.head.shrinkLevel(newLevel)
+	s.count--
+
+	return x
 }
 
 func (s *SkipList[K, V]) String() string {
