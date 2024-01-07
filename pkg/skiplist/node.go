@@ -44,6 +44,14 @@ func (n *Node[K, V]) extendLevel(newLevel int) {
 	}
 }
 
+func (n *Node[K, V]) shrinkLevel(newLevel int) {
+	oldLevel := n.Level()
+	if newLevel < oldLevel {
+		n.next = n.next[:newLevel]
+		n.dist = n.dist[:newLevel]
+	}
+}
+
 func (n *Node[K, V]) String() string {
 	return fmt.Sprintf("key: %v, value: %v | dist: %v", n.key, n.Value, n.dist)
 }

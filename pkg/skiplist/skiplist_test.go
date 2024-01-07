@@ -71,7 +71,7 @@ func TestGetByPosWithFixed(t *testing.T) {
 	fmt.Print(s.String())
 	for i, x := range data {
 		fmt.Printf("================== %d ==================== (%d)\n", i, x.key)
-		_, pos := s.Set(x.key, x.pos)
+		_, pos, _ := s.Set(x.key, x.pos)
 		fmt.Printf(" pos = %d\n", pos)
 		fmt.Print(s.String())
 	}
@@ -92,7 +92,7 @@ func TestGetByPosWithFixed2(t *testing.T) {
 	fmt.Print(s.String())
 	for i, x := range data {
 		fmt.Printf("================== %d ==================== (%d)\n", i, x.key)
-		_, pos := s.Set(x.key, x.pos)
+		_, pos, _ := s.Set(x.key, x.pos)
 		fmt.Printf(" pos = %d\n", pos)
 		fmt.Print(s.String())
 	}

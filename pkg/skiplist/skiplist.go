@@ -91,7 +91,8 @@ func (s *SkipList[K, V]) randomLevel() int {
 // Set sets the value `value` of a key `key` within the skip list.
 // Replaces the value if the key was already added to the set or inserts the key if not.
 // Return a reference to the node and its current position 0...n-1 within the skip list.
-func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int) {
+// The bool value is true, if a new node was created and false if the value was overridden.
+func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int, bool) {
 	update := make([]*Node[K, V], s.Level(), s.maxLevel)
 	updatePos := make([]int, s.Level(), s.maxLevel)
 	x := s.head
@@ -108,7 +109,7 @@ func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int) {
 		// key already exists: override value
 		x = x.next[0]
 		x.Value = value
-		return x, pos
+		return x, pos, false
 	}
 
 	// now x.key shall be smaller than key
@@ -140,7 +141,7 @@ func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int) {
 
 	s.count++
 
-	return x, pos + 1
+	return x, pos + 1, true
 }
 
 const InvalidPos = -1
@@ -182,6 +183,46 @@ func (s *SkipList[K, V]) GetByPos(k int) *Node[K, V] {
 	return x
 }
 
+func (s *SkipList[K, V]) Remove(key K) *Node[K, V] {
+	update := make([]*Node[K, V], s.Level(), s.maxLevel)
+	updatePos := make([]int, s.Level(), s.maxLevel)
+	x := s.head
+	pos := -1 // the head has position -1, the first element 0
+	for i := s.Level() - 1; i >= 0; i-- {
+		for x.next[i] != nil && cmp.Less(x.next[i].key, key) {
+			pos += x.dist[i]
+			x = x.next[i]
+		}
+		update[i] = x
+		updatePos[i] = pos
+	}
+	if len(x.next) > 0 && x.next[0] != nil && x.next[0].key == key {
+		// key found
+		x = x.next[0]
+
+		// remove node from list
+		for i := 0; i < s.Level(); i++ {
+			if update[i].next[i] == x {
+				update[i].next[i] = x.next[i]
+				update[i].dist[i] += x.dist[i] - 1
+			} else {
+				update[i].dist[i]--
+			}
+		}
+
+		// adapt level
+		newLevel := s.Level()
+		for newLevel > 0 && s.head.next[newLevel-1] == nil {
+			newLevel--
+		}
+		s.head.shrinkLevel(newLevel)
+		s.count--
+
+		return x
+	}
+	return nil
+}
+
 func (s *SkipList[K, V]) String() string {
 	str := fmt.Sprintf("n=%d L=%d\n", s.Size(), s.Level())
 
@@ -196,10 +237,3 @@ func (s *SkipList[K, V]) String() string {
 	}
 	return str
 }
-
-// TODO RemoveByPos
-
-// TODO
-// func (s *SkipList[K, V]) Remove(key K) bool {
-// 	return false
-// }
