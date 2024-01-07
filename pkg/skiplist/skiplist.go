@@ -183,7 +183,7 @@ func (s *SkipList[K, V]) GetByPos(k int) *Node[K, V] {
 	return x
 }
 
-func (s *SkipList[K, V]) Remove(key K) *Node[K, V] {
+func (s *SkipList[K, V]) Remove(key K) (*Node[K, V], int) {
 	update := make([]*Node[K, V], s.Level(), s.maxLevel)
 	updatePos := make([]int, s.Level(), s.maxLevel)
 	x := s.head
@@ -199,6 +199,7 @@ func (s *SkipList[K, V]) Remove(key K) *Node[K, V] {
 	if len(x.next) > 0 && x.next[0] != nil && x.next[0].key == key {
 		// key found
 		x = x.next[0]
+		pos++
 
 		// remove node from list
 		for i := 0; i < s.Level(); i++ {
@@ -218,9 +219,9 @@ func (s *SkipList[K, V]) Remove(key K) *Node[K, V] {
 		s.head.shrinkLevel(newLevel)
 		s.count--
 
-		return x
+		return x, pos
 	}
-	return nil
+	return nil, InvalidPos
 }
 
 func (s *SkipList[K, V]) String() string {

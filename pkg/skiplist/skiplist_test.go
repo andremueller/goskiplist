@@ -132,6 +132,7 @@ func makeRandomData(count int) []int {
 func randomTest(t *testing.T, s *SkipList[int, int], count int) {
 	keys := makeRandomData(count)
 
+	// Set
 	for i, k := range keys {
 		assert.Equal(t, i, s.Size())
 		node, pos := s.Get(k)
@@ -141,12 +142,38 @@ func randomTest(t *testing.T, s *SkipList[int, int], count int) {
 		assert.Equal(t, i+1, s.Size())
 	}
 
+	// Get
 	for i, k := range keys {
 		x, pos := s.Get(k)
 		assert.NotNil(t, x)
 		assert.Equal(t, k, x.Key())
 		assert.Equal(t, i, x.Value)
 		assert.Equal(t, k, pos) // key will exactly match its position
+	}
+
+	// Remove
+	n := s.Size()
+	for i, k := range keys {
+		x, pos := s.Remove(k)
+		assert.NotNil(t, x)
+		assert.True(t, pos >= 0)
+		assert.Equal(t, k, x.Key())
+		x2, pos2 := s.Get(k)
+		assert.Nil(t, x2)
+		assert.True(t, pos2 == InvalidPos)
+		n--
+		assert.Equal(t, n, s.Size())
+
+		// check if all remaining elements are found
+		for j := i + 1; j < len(keys); j++ {
+			node, ppos := s.Get(keys[j])
+			assert.NotNil(t, node)
+			assert.True(t, ppos >= 0 && ppos < s.Size())
+
+			node2 := s.GetByPos(ppos)
+			assert.NotNil(t, node2)
+			assert.Equal(t, node, node2)
+		}
 	}
 }
 
