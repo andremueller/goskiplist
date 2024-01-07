@@ -151,13 +151,14 @@ func (s *SkipList[K, V]) Get(key K) (*Node[K, V], int) {
 	x := s.head
 	pos := -1
 	for i := s.Level() - 1; i >= 0; i-- {
-		for x.next[i] != nil && cmp.Less(x.next[i].key, key) {
+		for x.next[i] != nil && x.next[i].key < key {
 			pos += x.dist[i]
 			x = x.next[i]
 		}
 	}
 	if len(x.next) > 0 {
 		x = x.next[0]
+		pos++
 		if x != nil && x.key == key {
 			return x, pos
 		}

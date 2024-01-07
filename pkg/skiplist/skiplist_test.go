@@ -84,7 +84,9 @@ func TestGetByPosWithFixed(t *testing.T) {
 }
 
 func TestGetByPosWithFixed2(t *testing.T) {
-	data := example2
+	data := make([]testData, len(example2))
+	copy(data, example2)
+	Shuffle(data)
 	s := NewSkipList[int, int](WithLevelFunc[int, int](createPlayBackLevelFunc(data)))
 
 	fmt.Print(s.String())
@@ -95,11 +97,27 @@ func TestGetByPosWithFixed2(t *testing.T) {
 		fmt.Print(s.String())
 	}
 
+	// GetByPos
 	for _, x := range data {
 		n := s.GetByPos(x.pos)
 		assert.NotNil(t, n)
 		assert.Equal(t, x.key, n.Key())
 	}
+
+	// Get
+	for _, x := range data {
+		n, pos := s.Get(x.key)
+		assert.NotNil(t, n)
+		assert.Equal(t, x.key, n.Key())
+		assert.Equal(t, x.pos, pos)
+	}
+
+}
+
+func Shuffle[V any](a []V) {
+	rand.Shuffle(len(a), func(i, j int) {
+		a[i], a[j] = a[j], a[i]
+	})
 }
 
 func makeRandomData(count int) []int {
@@ -151,7 +169,7 @@ func randomPosTest(t *testing.T, s *SkipList[int, int], count int) {
 	}
 
 	for i, k := range keys {
-		x := s.GetByPos(i)
+		x := s.GetByPos(k)
 		assert.NotNil(t, x)
 		assert.Equal(t, k, x.Key())
 		assert.Equal(t, i, x.Value)
