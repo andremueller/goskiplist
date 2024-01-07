@@ -95,7 +95,7 @@ func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int) {
 	update := make([]*Node[K, V], s.Level(), s.maxLevel)
 	updatePos := make([]int, s.Level(), s.maxLevel)
 	x := s.head
-	pos := -1
+	pos := -1 // the head has position -1, the first element 0
 	for i := s.Level() - 1; i >= 0; i-- {
 		for x.next[i] != nil && cmp.Less(x.next[i].key, key) {
 			pos += x.dist[i]
@@ -133,10 +133,7 @@ func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int) {
 			x.next[i] = update[i].next[i]
 			update[i].next[i] = x
 			delta := pos - updatePos[i]
-			x.dist[i] = update[i].dist[i] - delta - 1
-			if x.dist[i] < 0 {
-				x.dist[i] = 0
-			}
+			x.dist[i] = update[i].dist[i] - delta
 			update[i].dist[i] = delta + 1
 		}
 	}

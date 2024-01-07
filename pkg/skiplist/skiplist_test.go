@@ -12,20 +12,34 @@ import (
 type testData struct {
 	key   int
 	level int
+	pos   int
 }
 
 // example Data of Figure 1 of "A skip List Cookbok"
 var example1 = []testData{
-	{3, 1},
-	{6, 4},
-	{7, 1},
-	{9, 2},
-	{12, 1},
-	{17, 2},
-	{19, 1},
-	{21, 1},
-	{25, 3},
-	{26, 1},
+	{3, 1, 0},
+	{6, 4, 1},
+	{7, 1, 2},
+	{9, 2, 3},
+	{12, 1, 4},
+	{17, 2, 5},
+	{19, 1, 6},
+	{21, 1, 7},
+	{25, 3, 8},
+	{26, 1, 9},
+}
+
+var example2 = []testData{
+	{3, 1, 0},
+	{6, 4, 1},
+	{7, 1, 2},
+	{9, 2, 3},
+	{12, 1, 4},
+	{17, 2, 5},
+	{19, 1, 6},
+	{21, 1, 7},
+	{26, 1, 9},
+	{25, 3, 8},
 }
 
 // returns one level after the other instead of "random" levels for test use
@@ -51,22 +65,38 @@ func createSkipList(data []testData) *SkipList[int, int] {
 }
 
 func TestGetByPosWithFixed(t *testing.T) {
-	// s := createSkipList(example1)
-	s := NewSkipList[int, int](WithLevelFunc[int, int](createPlayBackLevelFunc(example1)))
+	data := example1
+	s := NewSkipList[int, int](WithLevelFunc[int, int](createPlayBackLevelFunc(data)))
 
 	fmt.Print(s.String())
-	for i, x := range example1 {
-		fmt.Printf("================== %d ====================\n", i)
-		_, pos := s.Set(x.key, i)
+	for i, x := range data {
+		fmt.Printf("================== %d ==================== (%d)\n", i, x.key)
+		_, pos := s.Set(x.key, x.pos)
 		fmt.Printf(" pos = %d\n", pos)
 		fmt.Print(s.String())
 	}
 
-	// n := s.GetByPos(s.Size() - 1)
-	// assert.NotNil(t, n)
+	for _, x := range data {
+		n := s.GetByPos(x.pos)
+		assert.NotNil(t, n)
+		assert.Equal(t, x.key, n.Key())
+	}
+}
 
-	for i, x := range example1 {
-		n := s.GetByPos(i)
+func TestGetByPosWithFixed2(t *testing.T) {
+	data := example2
+	s := NewSkipList[int, int](WithLevelFunc[int, int](createPlayBackLevelFunc(data)))
+
+	fmt.Print(s.String())
+	for i, x := range data {
+		fmt.Printf("================== %d ==================== (%d)\n", i, x.key)
+		_, pos := s.Set(x.key, x.pos)
+		fmt.Printf(" pos = %d\n", pos)
+		fmt.Print(s.String())
+	}
+
+	for _, x := range data {
+		n := s.GetByPos(x.pos)
 		assert.NotNil(t, n)
 		assert.Equal(t, x.key, n.Key())
 	}
