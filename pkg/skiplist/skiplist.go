@@ -23,22 +23,28 @@ func defaultLevelFunc(p float64, maxLevel int) int {
 	return level
 }
 
+// SkipList is a structure implementing the skip list of William Pugh.
+// It allows in addition to the standard key operations SkipList.Set(), SkipList.Get(), and SkipList.Remove()
+// the indexed linear list operations SkipList.GetByPos() and SkipList.RemoveByPos().
+// There are two generic parameters K is the key, which must be cmp.Ordered policy, and the value V can be of any type.
 type SkipList[K cmp.Ordered, V any] struct {
 	p         float64     // probability for increasing the level of the skip list
 	maxLevel  int         // maximum levels of the skip list
 	count     int         // count is the number of elements in the skip list
+	levelFunc LevelFunc   // function for generating a random level
 	head      *Node[K, V] // the head node of the skip list
-	levelFunc LevelFunc
 }
 
 type skipListOption[K cmp.Ordered, V any] func(*SkipList[K, V])
 
+// WithLevelFunc adds a custom function for generating the level of each inserted element in the list.
 func WithLevelFunc[K cmp.Ordered, V any](levelFunc LevelFunc) skipListOption[K, V] {
 	return func(s *SkipList[K, V]) {
 		s.levelFunc = levelFunc
 	}
 }
 
+// WithMaxLevel overrides the DefaultMaxLevel.
 func WithMaxLevel[K cmp.Ordered, V any](maxLevel int) skipListOption[K, V] {
 	if maxLevel < 1 || maxLevel > MaxLevel {
 		log.Panic("Parameter maxLevel out of range (must be >=1 and <= MaxLevel)")
@@ -48,6 +54,7 @@ func WithMaxLevel[K cmp.Ordered, V any](maxLevel int) skipListOption[K, V] {
 	}
 }
 
+// WithProbability overrides the DefaultProbability.
 func WithProbability[K cmp.Ordered, V any](prob float64) skipListOption[K, V] {
 	if prob < 0.01 || prob > 0.99 {
 		log.Panic("Parameter probability out of range (must be >= 0.01 and <= 0.99)")
@@ -57,6 +64,7 @@ func WithProbability[K cmp.Ordered, V any](prob float64) skipListOption[K, V] {
 	}
 }
 
+// NewSkipList creates a new empty SkipList object.
 func NewSkipList[K cmp.Ordered, V any](options ...skipListOption[K, V]) *SkipList[K, V] {
 	var dummyKey K
 	var dummyValue V
@@ -75,10 +83,13 @@ func NewSkipList[K cmp.Ordered, V any](options ...skipListOption[K, V]) *SkipLis
 	return s
 }
 
+// First returns the first node of a skip list or nil if the list is empty. With the Node.Next() function
+// the list can be iterated.
 func (s *SkipList[K, V]) First() *Node[K, V] {
 	return s.head.Next()
 }
 
+// Size returns the number of elements within the skip list.
 func (s *SkipList[K, V]) Size() int {
 	return s.count
 }
@@ -94,7 +105,7 @@ func (s *SkipList[K, V]) randomLevel() int {
 
 // Set sets the value `value` of a key `key` within the skip list.
 // Replaces the value if the key was already added to the set or inserts the key if not.
-// Return a reference to the node and its current position 0...n-1 within the skip list.
+// Returns a reference to the node and its current position 0...n-1 within the skip list.
 // The bool value is true, if a new node was created and false if the value was overridden.
 func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int, bool) {
 	update := make([]*Node[K, V], s.Level(), s.maxLevel)
@@ -148,10 +159,11 @@ func (s *SkipList[K, V]) Set(key K, value V) (*Node[K, V], int, bool) {
 	return x, pos + 1, true
 }
 
+// InvalidPos is returned, when an element is not found within the skip list.
 const InvalidPos = -1
 
 // Get returns the node matching the searched key or nil if it was not found. The second return argument is the
-// position 0...n-1 of the key
+// position 0...n-1 of the key or InvalidPos if the element was not found.
 func (s *SkipList[K, V]) Get(key K) (*Node[K, V], int) {
 	x := s.head
 	pos := -1
@@ -171,6 +183,10 @@ func (s *SkipList[K, V]) Get(key K) (*Node[K, V], int) {
 	return nil, InvalidPos
 }
 
+// GetByPos returns the kth element of the skip list where k must be in the interval [0, Size()).
+// This operation is performed in O(log(n)) steps in the average due to the maintenance of the
+// distance vectors within each element.
+// Returns a node pointer to the element.
 func (s *SkipList[K, V]) GetByPos(k int) *Node[K, V] {
 	if k < 0 || k >= s.count {
 		return nil
@@ -187,6 +203,8 @@ func (s *SkipList[K, V]) GetByPos(k int) *Node[K, V] {
 	return x
 }
 
+// Remove removes an element with key `key` from the skip list.
+// Returns a reference to the removed element and its position 0...n-1 before it was removed.
 func (s *SkipList[K, V]) Remove(key K) (*Node[K, V], int) {
 	update := make([]*Node[K, V], s.Level(), s.maxLevel)
 	updatePos := make([]int, s.Level(), s.maxLevel)
@@ -228,6 +246,8 @@ func (s *SkipList[K, V]) Remove(key K) (*Node[K, V], int) {
 	return nil, InvalidPos
 }
 
+// Remove removes an element at position k [0, Size()) from the skip list.
+// Returns a reference to the removed element.
 func (s *SkipList[K, V]) RemoveByPos(k int) *Node[K, V] {
 	if k < 0 || k >= s.count {
 		return nil

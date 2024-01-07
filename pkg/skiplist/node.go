@@ -5,9 +5,10 @@ import (
 	"fmt"
 )
 
+// Node holds an element within the SkipList with a unique key `key`.
 type Node[K cmp.Ordered, V any] struct {
 	key   K
-	Value V
+	Value V // Value is the payload within an element node.
 	next  []*Node[K, V]
 	dist  []int
 }
@@ -32,6 +33,7 @@ func (n *Node[K, V]) Level() int {
 	return len(n.next)
 }
 
+// Next returns the adjacent element within the skip list. If there is no such element, nil is returned.
 func (n *Node[K, V]) Next() *Node[K, V] {
 	if len(n.next) > 0 {
 		return n.next[0]
