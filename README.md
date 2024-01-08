@@ -1,5 +1,7 @@
 # Skip Lists in Go
 
+[![Go](https://github.com/andremueller/goskiplist/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/andremueller/goskiplist/actions/workflows/go.yml)
+
 ## Introduction
 
 This is a new skip list library for Go supporting access by a key and index.
